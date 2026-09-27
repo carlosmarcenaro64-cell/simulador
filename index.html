@@ -46,16 +46,6 @@ button{cursor:pointer}
 .lab td,.lab th{padding:9px;border-bottom:1px solid var(--line);text-align:left}
 .lab th{color:var(--muted)}
 .hidden{display:none!important}
-.apiStatus{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#0c1727;color:var(--muted);font-size:.85rem}
-.apiDot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
-.apiStatus.ok .apiDot{background:var(--accent)}
-.modalBack{position:fixed;inset:0;background:rgba(2,7,14,.82);backdrop-filter:blur(8px);display:grid;place-items:center;padding:18px;z-index:9999}
-.modal{width:min(570px,100%);background:#101c2e;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
-.modal h2{margin:0 0 8px}.modal p{color:var(--muted);line-height:1.5}
-.apiInput{display:flex;gap:8px}.apiInput input{flex:1;min-width:0;background:#0b1726;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px}
-.apiHelp{font-size:.86rem;color:var(--muted);margin-top:10px}.apiHelp a{color:var(--accent2)}
-.warningBox{padding:11px 12px;border-radius:11px;background:#211d14;color:#ffe8ad;border:1px solid #594a24;margin:12px 0}
-@media(max-width:560px){.apiInput{flex-direction:column}.modal{padding:16px}}
 .studyGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .study{padding:11px;border-radius:10px;background:#152a43;color:var(--text);border:1px solid #315174}
 textarea{width:100%;min-height:90px;resize:vertical;background:#0b1726;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px}
@@ -66,48 +56,42 @@ label{display:block;margin:10px 0 6px;color:#c9d8e9;font-weight:650}
 select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}
 @media(max-width:780px){.chatForm input{flex-basis:100%}.chatForm .btn{flex:1}.grid{grid-template-columns:1fr}.vitals{grid-template-columns:repeat(2,1fr)}.chat{height:290px}.studyGrid{grid-template-columns:1fr}.wrap{padding:10px}.card{border-radius:14px;padding:13px}}
 
-/* ===== UI v2: clinical glass / responsive polish ===== */
-:root{
-  --bg:#06111f;--panel:rgba(15,31,50,.82);--panel2:rgba(20,43,67,.78);
-  --line:rgba(127,179,230,.22);--text:#edf7ff;--muted:#9db3c8;
-  --accent:#45e0b7;--accent2:#68aefc;--warn:#ffc857;--danger:#ff6b7a;
-}
+/* ===== Paciente Misterioso · UI estable v3 ===== */
+:root{--glow:rgba(66,211,167,.24)}
 body{
-  background:
-    radial-gradient(circle at 15% 0%,rgba(52,118,190,.17),transparent 34rem),
-    radial-gradient(circle at 90% 12%,rgba(69,224,183,.10),transparent 30rem),
-    linear-gradient(180deg,#071321,#05101d 70%);
-  color:var(--text);
+ background:
+ radial-gradient(circle at 8% 0%,rgba(54,125,210,.18),transparent 34rem),
+ radial-gradient(circle at 92% 8%,rgba(66,211,167,.12),transparent 30rem),
+ linear-gradient(145deg,#06101d,#09192a 58%,#06111f);
+ background-attachment:fixed;
 }
-header{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.card,.panel,.modalCard{
-  background:linear-gradient(145deg,rgba(19,39,62,.90),rgba(9,25,42,.86));
-  border:1px solid var(--line);
-  box-shadow:0 18px 50px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.025);
-}
-button{transition:transform .16s ease,filter .16s ease,border-color .16s ease,box-shadow .16s ease}
-button:hover{transform:translateY(-1px);filter:brightness(1.07)}
-button:active{transform:scale(.98)}
-input,textarea,select{
-  background:rgba(5,18,32,.82)!important;border:1px solid rgba(125,178,225,.30)!important;
-  color:var(--text)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)
-}
-input:focus,textarea:focus,select:focus{outline:none!important;border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(69,224,183,.12)}
-#chat{scroll-behavior:smooth;background:rgba(4,15,27,.55);border-radius:16px}
-.doctorMsg,.patientMsg,.systemMsg{animation:msgIn .22s ease both}
-@keyframes msgIn{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
-#voiceVisualizer{display:flex;align-items:center;gap:3px;height:18px;margin-left:7px}
-#voiceVisualizer i{display:block;width:3px;height:5px;border-radius:99px;background:var(--accent);animation:wave .8s ease-in-out infinite;animation-play-state:paused}
-#voiceVisualizer.active i{animation-play-state:running}
-#voiceVisualizer i:nth-child(2){animation-delay:.12s} #voiceVisualizer i:nth-child(3){animation-delay:.24s}
-#voiceVisualizer i:nth-child(4){animation-delay:.36s} #voiceVisualizer i:nth-child(5){animation-delay:.48s}
-@keyframes wave{0%,100%{height:5px;opacity:.45}50%{height:17px;opacity:1}}
-.ai-state{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(69,224,183,.09);border:1px solid rgba(69,224,183,.22)}
-@media(max-width:760px){
-  main{padding:12px!important}.grid{grid-template-columns:1fr!important;gap:12px!important}
-  .card,.panel{border-radius:18px!important} h1{font-size:1.2rem!important}
-  #chatForm{display:grid!important;grid-template-columns:1fr auto auto!important}
-  #question{min-width:0}.modalCard{width:min(94vw,560px)!important}
+.card{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 18px 45px rgba(0,0,0,.20);transition:.25s ease}
+.card:hover{border-color:#34506f;transform:translateY(-1px)}
+.btn,.study{transition:transform .15s ease,filter .15s ease,box-shadow .15s ease}
+.btn:hover,.study:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.btn:active,.study:active{transform:scale(.98)}
+.vital{transition:.2s ease}.vital:hover{transform:translateY(-2px);border-color:#3d668c}
+.msg{animation:popMsg .22s ease both}
+@keyframes popMsg{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+.avatar{animation:floatAvatar 3.2s ease-in-out infinite;box-shadow:0 0 24px var(--glow)}
+@keyframes floatAvatar{50%{transform:translateY(-4px)}}
+.voice-bars{display:inline-flex;align-items:center;gap:3px;height:18px;margin-left:8px;vertical-align:middle}
+.voice-bars i{display:block;width:3px;height:5px;border-radius:9px;background:#42d3a7;animation:voiceWave .7s ease-in-out infinite;animation-play-state:paused}
+.voice-bars.active i{animation-play-state:running}
+.voice-bars i:nth-child(2){animation-delay:.1s}.voice-bars i:nth-child(3){animation-delay:.2s}.voice-bars i:nth-child(4){animation-delay:.3s}
+@keyframes voiceWave{50%{height:17px}}
+.apiModal{position:fixed;inset:0;background:rgba(2,8,15,.78);backdrop-filter:blur(9px);z-index:9999;display:grid;place-items:center;padding:18px}
+.apiBox{width:min(560px,96vw);background:linear-gradient(145deg,#12243a,#0a1727);border:1px solid #315174;border-radius:22px;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.55);animation:modalIn .25s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.apiBox h2{margin:0 0 7px}.apiBox p{color:#9db0c7;line-height:1.45}
+.apiBox input,.apiBox select{width:100%;background:#091522;color:#eef6ff;border:1px solid #315174;border-radius:11px;padding:12px;margin-top:5px}
+.apiGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.statusPill{display:inline-flex;padding:7px 11px;border-radius:999px;background:#132b31;border:1px solid #245e52;color:#8cf0d0;font-size:.85rem}
+.hidden{display:none!important}
+@media(max-width:780px){
+ .wrap{padding:9px}.grid{grid-template-columns:1fr}.card{padding:13px;border-radius:17px}
+ .vitals{grid-template-columns:repeat(2,1fr)}.chat{height:310px}
+ .apiGrid{grid-template-columns:1fr}.top{position:relative}.studyGrid{grid-template-columns:1fr}
 }
 
 </style>
@@ -126,47 +110,12 @@ input:focus,textarea:focus,select:focus{outline:none!important;border-color:var(
         <option value="experto">Experto</option>
         <option value="raro">Extraordinariamente raro</option>
       </select>
-      <div class="apiStatus" id="apiStatus"><span class="apiDot"></span><span id="apiStatusText">IA sin configurar</span></div>
-      <button class="btn secondary" type="button" id="apiConfigBtn">⚙️ Configurar IA</button>
+      <button class="btn secondary" id="aiConfigBtn" type="button">🤖 Configurar IA</button>
       <button class="btn" id="newCase">Nuevo paciente</button>
     </div>
   </header>
 
   <div class="notice">⚠️ Simulador educativo. No debe utilizarse para tomar decisiones clínicas sobre pacientes reales.</div>
-
-  <div class="modalBack" id="apiModal" role="dialog" aria-modal="true" aria-labelledby="apiTitle">
-    <div class="modal">
-      <h2 id="apiTitle">🤖 Conecta tu IA — modo de prueba</h2>
-      <p>Para usar el paciente con IA, cada persona utiliza su propia clave del proveedor que elija.</p>
-      <div class="warningBox">🧪 Elige OpenAI, Gemini u otra API compatible. La clave queda únicamente en memoria; al recargar o cerrar la pestaña se elimina.</div>
-      <label for="aiProvider">Proveedor de IA</label>
-      <select id="aiProvider">
-        <option value="openai">OpenAI / ChatGPT</option>
-        <option value="gemini">Google Gemini</option>
-        <option value="compatible">Otra IA compatible con OpenAI</option>
-      </select>
-
-      <div id="customEndpointWrap" class="hidden">
-        <label for="customEndpoint">Endpoint compatible</label>
-        <input id="customEndpoint" type="url" placeholder="https://.../v1/chat/completions" autocomplete="off">
-      </div>
-
-      <label for="aiModel">Modelo</label>
-      <input id="aiModel" type="text" value="gpt-5-mini" placeholder="Ej.: gpt-5-mini">
-
-      <label for="apiKeyInput">Tu API key</label>
-      <div class="apiInput">
-        <input id="apiKeyInput" type="password" autocomplete="off" placeholder="Pega aquí tu API key">
-        <button class="btn secondary" type="button" id="toggleApiKey">👁️</button>
-      </div>
-      <div class="apiHelp">¿Todavía no tienes una? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Crear/administrar API key ↗</a></div>
-      <div class="actions">
-        <button class="btn" type="button" id="saveApiKey">Conectar mi API</button>
-        <button class="btn secondary" type="button" id="useLocalMode">Continuar sin IA</button>
-      </div>
-      <div class="meta" id="apiMessage">Modo de prueba directo. No se usa localStorage, sessionStorage ni cookies.</div>
-    </div>
-  </div>
 
   <main class="grid">
     <div>
@@ -200,7 +149,7 @@ input:focus,textarea:focus,select:focus{outline:none!important;border-color:var(
             <input type="checkbox" id="autoSpeak" checked> Respuesta por voz
           </label>
         </div>
-        <div class="meta" id="voiceStatus">Voz lista. <span id="voiceVisualizer"><i></i><i></i><i></i><i></i><i></i></span> Si el navegador no admite reconocimiento, puede seguir usando el chat escrito.</div>
+        <div class="meta" id="voiceStatus">Voz lista. <span id="voiceBars" class="voice-bars"><i></i><i></i><i></i><i></i></span> Si el navegador no admite reconocimiento, puede seguir usando el chat escrito.</div>
       </section>
 
       <section class="card section">
@@ -230,6 +179,32 @@ input:focus,textarea:focus,select:focus{outline:none!important;border-color:var(
       </section>
     </div>
   </main>
+</div>
+
+
+<div class="apiModal" id="apiModal">
+ <div class="apiBox">
+  <h2>🤖 Conecta tu IA</h2>
+  <p>Elige proveedor y pega tu propia API key. La clave queda solamente en memoria y se borra al recargar o cerrar la pestaña.</p>
+  <div class="apiGrid">
+   <div><label for="aiProvider">Proveedor</label>
+    <select id="aiProvider">
+     <option value="gemini">Google Gemini</option>
+     <option value="openai">OpenAI / ChatGPT</option>
+     <option value="custom">Otra compatible con OpenAI</option>
+    </select>
+   </div>
+   <div><label for="aiModel">Modelo</label><input id="aiModel" value="gemini-2.5-flash" autocomplete="off"></div>
+  </div>
+  <div id="customEndpointBox" class="hidden"><label for="customEndpoint">Endpoint</label><input id="customEndpoint" placeholder="https://.../v1/chat/completions" autocomplete="off"></div>
+  <label for="apiKeyInput">API key</label>
+  <input id="apiKeyInput" type="password" placeholder="Pega aquí tu clave" autocomplete="off">
+  <div class="actions">
+   <button class="btn" id="connectAI" type="button">Conectar</button>
+   <button class="btn secondary" id="localMode" type="button">Continuar sin IA</button>
+  </div>
+  <p id="apiInfo">Modo de prueba. No se usa localStorage, sessionStorage ni cookies.</p>
+ </div>
 </div>
 
 <script>
@@ -328,76 +303,8 @@ const cases=[
 
 const $=id=>document.getElementById(id);
 let current=null, usedStudies=new Set(), hints=0, caseNo=1, lastPatientReply="";
-let apiConfigured=false, openaiApiKey="";
-function openApiModal(){ $("apiModal").classList.remove("hidden"); setTimeout(()=>$("apiKeyInput").focus(),80); }
-function closeApiModal(){ $("apiModal").classList.add("hidden"); $("apiKeyInput").value=""; }
-function setApiStatus(ok,text){
-  apiConfigured=ok;
-  $("apiStatus").classList.toggle("ok",ok);
-  $("apiStatusText").textContent=text;
-}
-async function aiPatientReply(question){
-  if(!apiConfigured || !openaiApiKey) return null;
+let apiKey="", aiConnected=false, aiBusy=false;
 
-  const provider=$("aiProvider").value;
-  const model=$("aiModel").value.trim();
-  const caseData={
-    level:current.level, age:current.age, sex:current.sex, complaint:current.complaint,
-    vitals:current.vitals, labs:current.labs, diagnosis:current.diagnosis,
-    history:current.history, studies:current.studies
-  };
-  const systemPrompt=`Eres un paciente simulado para educación clínica.
-Habla en español natural y en primera persona. Responde SOLO como el paciente.
-Nunca reveles el diagnóstico ni digas que eres una IA.
-No inventes datos clínicos ausentes. Si no sabes algo, dilo naturalmente.
-Mantén respuestas breves, humanas y coherentes con el caso.
-DATOS DEL CASO:
-${JSON.stringify(caseData)}`;
-
-  let res, data, reply="";
-
-  if(provider==="gemini"){
-    if(!model) throw new Error("Selecciona un modelo Gemini.");
-    const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-    res=await fetch(url,{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-goog-api-key":openaiApiKey},
-      body:JSON.stringify({
-        system_instruction:{parts:[{text:systemPrompt}]},
-        contents:[{role:"user",parts:[{text:question}]}],
-        generationConfig:{maxOutputTokens:180,temperature:.65}
-      })
-    });
-    data=await res.json().catch(()=>({}));
-    if(!res.ok){
-      const detail=data?.error?.message || data?.error?.status || ("Error HTTP "+res.status);
-      throw new Error(`Gemini ${res.status}: ${detail}`);
-    }
-    reply=(data?.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("").trim();
-  }else{
-    const endpoint=provider==="openai"
-      ?"https://api.openai.com/v1/chat/completions"
-      :$("customEndpoint").value.trim();
-    if(!endpoint) throw new Error("Falta el endpoint de la IA.");
-    if(!model) throw new Error("Falta indicar el modelo.");
-    res=await fetch(endpoint,{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+openaiApiKey},
-      body:JSON.stringify({
-        model,
-        messages:[{role:"system",content:systemPrompt},{role:"user",content:question}],
-        max_tokens:180
-      })
-    });
-    data=await res.json().catch(()=>({}));
-    if(!res.ok){
-      const detail=data?.error?.message || data?.message || ("Error HTTP "+res.status);
-      throw new Error(`${provider==="openai"?"OpenAI":"API"} ${res.status}: ${detail}`);
-    }
-    reply=data?.choices?.[0]?.message?.content?.trim()||"";
-  }
-  return reply || "No sabría decirle, doctora.";
-}
 
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function addMsg(text,type){
@@ -405,23 +312,22 @@ function addMsg(text,type){
  $("chat").appendChild(d);$("chat").scrollTop=$("chat").scrollHeight;
  if(type==="patientMsg") lastPatientReply=text;
 }
-function getBestSpanishVoice(){
- const voices=speechSynthesis.getVoices();
- const spanish=voices.filter(v=>/^es(-|_)/i.test(v.lang));
- const preferred=["Google español","Microsoft Elvira","Microsoft Dalia","Microsoft Sabina","Paulina","Monica","Luciana"];
- return preferred.map(n=>spanish.find(v=>v.name.toLowerCase().includes(n.toLowerCase()))).find(Boolean)
-        || spanish.find(v=>/female|mujer/i.test(v.name))
-        || spanish[0] || voices[0];
+function bestVoice(){
+ const vs=speechSynthesis.getVoices();
+ const es=vs.filter(v=>/^es([-_]|$)/i.test(v.lang)||/spanish|español/i.test(v.name));
+ const names=["Dalia","Elvira","Sabina","Paulina","Mónica","Monica","Luciana","Helena","Google español"];
+ for(const n of names){const v=es.find(x=>x.name.toLowerCase().includes(n.toLowerCase()));if(v)return v}
+ return es[0]||vs[0]||null;
 }
 function speak(text){
- if(!("speechSynthesis" in window)||!$("voiceReply").checked)return;
+ if(!("speechSynthesis" in window)||!text)return;
  speechSynthesis.cancel();
  const u=new SpeechSynthesisUtterance(text);
- u.lang="es-SV"; u.rate=.94; u.pitch=1.04; u.volume=1;
- const v=getBestSpanishVoice(); if(v)u.voice=v;
- const vis=$("voiceVisualizer");
- u.onstart=()=>vis&&vis.classList.add("active");
- u.onend=u.onerror=()=>vis&&vis.classList.remove("active");
+ u.lang="es-MX";u.rate=.92;u.pitch=1.02;u.volume=1;
+ const v=bestVoice();if(v)u.voice=v;
+ const bars=$("voiceBars");
+ u.onstart=()=>{if(bars)bars.classList.add("active");$("voiceStatus").childNodes[0].nodeValue="Paciente hablando… ";};
+ u.onend=u.onerror=()=>{if(bars)bars.classList.remove("active");$("voiceStatus").childNodes[0].nodeValue="Voz lista. ";};
  speechSynthesis.speak(u);
 }
 function patientReply(text){
@@ -457,6 +363,49 @@ function answer(q){
  for(const [needle,key] of map){if(t.includes(needle)&&current.history[key]){ans=current.history[key];break}}
  return ans;
 }
+
+function providerSettings(){
+ const p=$("aiProvider").value;
+ if(p==="gemini") return {p,model:$("aiModel").value.trim(),endpoint:""};
+ if(p==="openai") return {p,model:$("aiModel").value.trim(),endpoint:"https://api.openai.com/v1/chat/completions"};
+ return {p,model:$("aiModel").value.trim(),endpoint:$("customEndpoint").value.trim()};
+}
+function casePrompt(){
+ return `Eres un paciente simulado para educación clínica. Responde en español natural, primera persona y brevemente.
+No reveles el diagnóstico, no digas que eres IA y no inventes datos ausentes. Si algo no está especificado, responde que no lo sabes/no lo recuerdas/no te lo han evaluado.
+Caso: ${JSON.stringify({age:current.age,sex:current.sex,complaint:current.complaint,vitals:current.vitals,labs:current.labs,history:current.history,studies:current.studies,diagnosis:current.diagnosis})}`;
+}
+async function askAI(q){
+ const cfg=providerSettings();
+ if(cfg.p==="gemini"){
+   if(!cfg.model)throw new Error("Falta el modelo Gemini.");
+   const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`;
+   const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},
+    body:JSON.stringify({system_instruction:{parts:[{text:casePrompt()}]},contents:[{role:"user",parts:[{text:q}]}],generationConfig:{temperature:.65,maxOutputTokens:180}})});
+   const d=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(d?.error?.message||`Gemini HTTP ${r.status}`);
+   return (d?.candidates?.[0]?.content?.parts||[]).map(x=>x.text||"").join("").trim();
+ }
+ if(!cfg.endpoint)throw new Error("Falta el endpoint.");
+ const r=await fetch(cfg.endpoint,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
+  body:JSON.stringify({model:cfg.model,messages:[{role:"system",content:casePrompt()},{role:"user",content:q}],max_tokens:180})});
+ const d=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(d?.error?.message||d?.message||`HTTP ${r.status}`);
+ return d?.choices?.[0]?.message?.content?.trim()||"";
+}
+async function submitQuestion(){
+ const q=$("question").value.trim();if(!q||aiBusy)return;
+ addMsg(q,"doctorMsg");$("question").value="";
+ if(!aiConnected){setTimeout(()=>patientReply(answer(q)),180);return}
+ aiBusy=true;
+ addMsg("El paciente está pensando…","systemMsg");
+ const wait=$("chat").lastElementChild;
+ try{
+   const reply=await askAI(q);wait.remove();patientReply(reply||answer(q));
+ }catch(err){
+   wait.remove();addMsg("⚠️ IA: "+err.message,"systemMsg");
+ }finally{aiBusy=false}
+}
 function study(name,btn){
  if(usedStudies.has(name)) return;
  usedStudies.add(name);btn.disabled=true;
@@ -464,23 +413,7 @@ function study(name,btn){
  box.innerHTML=`<b>${esc(name)}</b><br>${esc(current.studies[name])}`;
  $("studyResults").appendChild(box);
 }
-$("chatForm").addEventListener("submit",async e=>{
- e.preventDefault(); const q=$("question").value.trim(); if(!q)return;
- addMsg(q,"doctorMsg");$("question").value="";
- if(apiConfigured){
-   addMsg("Pensando…","systemMsg");
-   const thinking=$("chat").lastElementChild;
-   try{
-     const reply=await aiPatientReply(q);
-     thinking.remove();
-     patientReply(reply||answer(q));
-   }catch(err){
-     thinking.remove();
-     addMsg("No se pudo usar la IA: "+err.message,"systemMsg");
-     patientReply(answer(q));
-   }
- }else setTimeout(()=>patientReply(answer(q)),250);
-});
+$("chatForm").addEventListener("submit",e=>{e.preventDefault();submitQuestion();});
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognition=null, listening=false;
@@ -500,12 +433,8 @@ if(SpeechRecognition){
  };
  recognition.onend=()=>{
    listening=false;$("micBtn").textContent="🎙️ Hablar";
-   $("voiceStatus").textContent="Voz lista.";
-   const q=$("question").value.trim();
-   if(q){
-     addMsg(q,"doctorMsg");$("question").value="";
-     setTimeout(()=>patientReply(answer(q)),250);
-   }
+   $("voiceStatus").childNodes[0].nodeValue="Voz lista. ";
+   if($("question").value.trim()) submitQuestion();
  };
  $("micBtn").addEventListener("click",()=>{
    if(listening){recognition.stop();return}
@@ -521,35 +450,30 @@ $("stopVoice").addEventListener("click",()=>{
 });
 $("speakLast").addEventListener("click",()=>speak(lastPatientReply));
 
-function updateProviderUI(){
-  const p=$("aiProvider").value;
-  $("customEndpointWrap").classList.toggle("hidden",p!=="compatible");
-  if(p==="openai") $("aiModel").value="gpt-5-mini";
-  if(p==="gemini") $("aiModel").value="gemini-3.8-flash";
-  if(p==="compatible") $("aiModel").value="";
-  const msg=p==="gemini"?"Gemini API nativa":p==="openai"?"OpenAI API":"API compatible";
-  $("apiMessage").textContent=`Proveedor: ${msg}. La clave solo vive en esta pestaña.`;
+
+function openAIConfig(){$("apiModal").classList.remove("hidden");}
+function closeAIConfig(){$("apiModal").classList.add("hidden");$("apiKeyInput").value="";}
+function updateProvider(){
+ const p=$("aiProvider").value;
+ $("customEndpointBox").classList.toggle("hidden",p!=="custom");
+ if(p==="gemini")$("aiModel").value="gemini-2.5-flash";
+ else if(p==="openai")$("aiModel").value="gpt-5-mini";
+ else $("aiModel").value="";
 }
-$("aiProvider").addEventListener("change",updateProviderUI);
-$("apiConfigBtn").addEventListener("click",openApiModal);
-$("toggleApiKey").addEventListener("click",()=>{
-  const i=$("apiKeyInput"); i.type=i.type==="password"?"text":"password";
+$("aiProvider").addEventListener("change",updateProvider);
+$("aiConfigBtn").addEventListener("click",openAIConfig);
+$("localMode").addEventListener("click",()=>{apiKey="";aiConnected=false;closeAIConfig();});
+$("connectAI").addEventListener("click",()=>{
+ const k=$("apiKeyInput").value.trim();
+ if(!k){$("apiInfo").textContent="⚠️ Pega una API key primero.";return}
+ apiKey=k;aiConnected=true;
+ $("apiInfo").textContent="✅ API cargada para esta pestaña.";
+ $("apiConfigBtn").textContent="🤖 IA conectada";
+ setTimeout(closeAIConfig,450);
 });
-$("useLocalMode").addEventListener("click",()=>{
-  openaiApiKey="";
-  setApiStatus(false,"Modo local");
-  closeApiModal();
-});
-$("saveApiKey").addEventListener("click",()=>{
-  const key=$("apiKeyInput").value.trim();
-  if(!key){ $("apiMessage").textContent="⚠️ Primero pega tu API key."; return; }
-  openaiApiKey=key;
-  $("apiKeyInput").value="";
-  setApiStatus(true,"IA conectada · prueba");
-  $("apiMessage").textContent="✅ Clave cargada solo en memoria. Se eliminará al cerrar o recargar la pestaña.";
-  setTimeout(closeApiModal,650);
-});
-window.addEventListener("pagehide",()=>{ openaiApiKey=""; });
+window.addEventListener("pagehide",()=>{apiKey="";});
+if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}
+
 $("newCase").addEventListener("click",choose);
 $("difficulty").addEventListener("change",choose);
 $("hint").addEventListener("click",()=>{
@@ -572,8 +496,6 @@ $("finish").addEventListener("click",()=>{
 });
 choose();
 })();
-
-if("speechSynthesis" in window) speechSynthesis.onvoiceschanged=()=>getBestSpanishVoice();
 </script>
 </body>
 </html>
