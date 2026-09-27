@@ -94,12 +94,27 @@ select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-
       <h2 id="apiTitle">🤖 Conecta tu IA — modo de prueba</h2>
       <p>Para usar el paciente con IA, cada persona debe utilizar su propia API de OpenAI.</p>
       <div class="warningBox">🧪 Elige OpenAI, Gemini u otra API compatible. La clave queda únicamente en memoria; al recargar o cerrar la pestaña se elimina.</div>
-      <label for="apiKeyInput">Tu API key de OpenAI</label>
+      <label for="aiProvider">Proveedor de IA</label>
+      <select id="aiProvider">
+        <option value="openai">OpenAI / ChatGPT</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="compatible">Otra IA compatible con OpenAI</option>
+      </select>
+
+      <div id="customEndpointWrap" class="hidden">
+        <label for="customEndpoint">Endpoint compatible</label>
+        <input id="customEndpoint" type="url" placeholder="https://.../v1/chat/completions" autocomplete="off">
+      </div>
+
+      <label for="aiModel">Modelo</label>
+      <input id="aiModel" type="text" value="gpt-5-mini" placeholder="Ej.: gpt-5-mini">
+
+      <label for="apiKeyInput">Tu API key</label>
       <div class="apiInput">
         <input id="apiKeyInput" type="password" autocomplete="off" placeholder="Pega aquí tu API key">
         <button class="btn secondary" type="button" id="toggleApiKey">👁️</button>
       </div>
-      <div class="apiHelp">¿Todavía no tienes una? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Crear mi API key ↗</a></div>
+      <div class="apiHelp">¿Todavía no tienes una? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Crear/administrar API key ↗</a></div>
       <div class="actions">
         <button class="btn" type="button" id="saveApiKey">Conectar mi API</button>
         <button class="btn secondary" type="button" id="useLocalMode">Continuar sin IA</button>
