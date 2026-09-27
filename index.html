@@ -65,6 +65,51 @@ label{display:block;margin:10px 0 6px;color:#c9d8e9;font-weight:650}
 .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}
 @media(max-width:780px){.chatForm input{flex-basis:100%}.chatForm .btn{flex:1}.grid{grid-template-columns:1fr}.vitals{grid-template-columns:repeat(2,1fr)}.chat{height:290px}.studyGrid{grid-template-columns:1fr}.wrap{padding:10px}.card{border-radius:14px;padding:13px}}
+
+/* ===== UI v2: clinical glass / responsive polish ===== */
+:root{
+  --bg:#06111f;--panel:rgba(15,31,50,.82);--panel2:rgba(20,43,67,.78);
+  --line:rgba(127,179,230,.22);--text:#edf7ff;--muted:#9db3c8;
+  --accent:#45e0b7;--accent2:#68aefc;--warn:#ffc857;--danger:#ff6b7a;
+}
+body{
+  background:
+    radial-gradient(circle at 15% 0%,rgba(52,118,190,.17),transparent 34rem),
+    radial-gradient(circle at 90% 12%,rgba(69,224,183,.10),transparent 30rem),
+    linear-gradient(180deg,#071321,#05101d 70%);
+  color:var(--text);
+}
+header{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.card,.panel,.modalCard{
+  background:linear-gradient(145deg,rgba(19,39,62,.90),rgba(9,25,42,.86));
+  border:1px solid var(--line);
+  box-shadow:0 18px 50px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.025);
+}
+button{transition:transform .16s ease,filter .16s ease,border-color .16s ease,box-shadow .16s ease}
+button:hover{transform:translateY(-1px);filter:brightness(1.07)}
+button:active{transform:scale(.98)}
+input,textarea,select{
+  background:rgba(5,18,32,.82)!important;border:1px solid rgba(125,178,225,.30)!important;
+  color:var(--text)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)
+}
+input:focus,textarea:focus,select:focus{outline:none!important;border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(69,224,183,.12)}
+#chat{scroll-behavior:smooth;background:rgba(4,15,27,.55);border-radius:16px}
+.doctorMsg,.patientMsg,.systemMsg{animation:msgIn .22s ease both}
+@keyframes msgIn{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
+#voiceVisualizer{display:flex;align-items:center;gap:3px;height:18px;margin-left:7px}
+#voiceVisualizer i{display:block;width:3px;height:5px;border-radius:99px;background:var(--accent);animation:wave .8s ease-in-out infinite;animation-play-state:paused}
+#voiceVisualizer.active i{animation-play-state:running}
+#voiceVisualizer i:nth-child(2){animation-delay:.12s} #voiceVisualizer i:nth-child(3){animation-delay:.24s}
+#voiceVisualizer i:nth-child(4){animation-delay:.36s} #voiceVisualizer i:nth-child(5){animation-delay:.48s}
+@keyframes wave{0%,100%{height:5px;opacity:.45}50%{height:17px;opacity:1}}
+.ai-state{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(69,224,183,.09);border:1px solid rgba(69,224,183,.22)}
+@media(max-width:760px){
+  main{padding:12px!important}.grid{grid-template-columns:1fr!important;gap:12px!important}
+  .card,.panel{border-radius:18px!important} h1{font-size:1.2rem!important}
+  #chatForm{display:grid!important;grid-template-columns:1fr auto auto!important}
+  #question{min-width:0}.modalCard{width:min(94vw,560px)!important}
+}
+
 </style>
 </head>
 <body>
@@ -92,7 +137,7 @@ select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-
   <div class="modalBack" id="apiModal" role="dialog" aria-modal="true" aria-labelledby="apiTitle">
     <div class="modal">
       <h2 id="apiTitle">🤖 Conecta tu IA — modo de prueba</h2>
-      <p>Para usar el paciente con IA, cada persona debe utilizar su propia API de OpenAI.</p>
+      <p>Para usar el paciente con IA, cada persona utiliza su propia clave del proveedor que elija.</p>
       <div class="warningBox">🧪 Elige OpenAI, Gemini u otra API compatible. La clave queda únicamente en memoria; al recargar o cerrar la pestaña se elimina.</div>
       <label for="aiProvider">Proveedor de IA</label>
       <select id="aiProvider">
@@ -155,7 +200,7 @@ select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-
             <input type="checkbox" id="autoSpeak" checked> Respuesta por voz
           </label>
         </div>
-        <div class="meta" id="voiceStatus">Voz lista. Si el navegador no admite reconocimiento, puede seguir usando el chat escrito.</div>
+        <div class="meta" id="voiceStatus">Voz lista. <span id="voiceVisualizer"><i></i><i></i><i></i><i></i><i></i></span> Si el navegador no admite reconocimiento, puede seguir usando el chat escrito.</div>
       </section>
 
       <section class="card section">
@@ -296,49 +341,62 @@ async function aiPatientReply(question){
 
   const provider=$("aiProvider").value;
   const model=$("aiModel").value.trim();
-  let endpoint="";
-  if(provider==="openai") endpoint="https://api.openai.com/v1/chat/completions";
-  else if(provider==="gemini") endpoint="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-  else endpoint=$("customEndpoint").value.trim();
-
-  if(!endpoint) throw new Error("Falta el endpoint de la IA.");
-  if(!model) throw new Error("Falta indicar el modelo.");
-
   const caseData={
     level:current.level, age:current.age, sex:current.sex, complaint:current.complaint,
     vitals:current.vitals, labs:current.labs, diagnosis:current.diagnosis,
     history:current.history, studies:current.studies
   };
-
   const systemPrompt=`Eres un paciente simulado para educación clínica.
-Responde en español natural y en primera persona como el paciente descrito.
+Habla en español natural y en primera persona. Responde SOLO como el paciente.
 Nunca reveles el diagnóstico ni digas que eres una IA.
-No inventes resultados, antecedentes o síntomas que no estén en el caso.
-Si te preguntan algo no especificado, responde naturalmente que no lo sabes, no lo recuerdas o no te lo han evaluado.
-Responde de forma breve como un paciente real. No des consejos médicos.
+No inventes datos clínicos ausentes. Si no sabes algo, dilo naturalmente.
+Mantén respuestas breves, humanas y coherentes con el caso.
 DATOS DEL CASO:
 ${JSON.stringify(caseData)}`;
 
-  const res=await fetch(endpoint,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer "+openaiApiKey
-    },
-    body:JSON.stringify({
-      model,
-      messages:[
-        {role:"system",content:systemPrompt},
-        {role:"user",content:question}
-      ],
-      max_tokens:180
-    })
-  });
+  let res, data, reply="";
 
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data?.error?.message || data?.message || ("Error HTTP "+res.status));
-
-  return data?.choices?.[0]?.message?.content || "No estoy seguro, doctora.";
+  if(provider==="gemini"){
+    if(!model) throw new Error("Selecciona un modelo Gemini.");
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    res=await fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-goog-api-key":openaiApiKey},
+      body:JSON.stringify({
+        system_instruction:{parts:[{text:systemPrompt}]},
+        contents:[{role:"user",parts:[{text:question}]}],
+        generationConfig:{maxOutputTokens:180,temperature:.65}
+      })
+    });
+    data=await res.json().catch(()=>({}));
+    if(!res.ok){
+      const detail=data?.error?.message || data?.error?.status || ("Error HTTP "+res.status);
+      throw new Error(`Gemini ${res.status}: ${detail}`);
+    }
+    reply=(data?.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("").trim();
+  }else{
+    const endpoint=provider==="openai"
+      ?"https://api.openai.com/v1/chat/completions"
+      :$("customEndpoint").value.trim();
+    if(!endpoint) throw new Error("Falta el endpoint de la IA.");
+    if(!model) throw new Error("Falta indicar el modelo.");
+    res=await fetch(endpoint,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+openaiApiKey},
+      body:JSON.stringify({
+        model,
+        messages:[{role:"system",content:systemPrompt},{role:"user",content:question}],
+        max_tokens:180
+      })
+    });
+    data=await res.json().catch(()=>({}));
+    if(!res.ok){
+      const detail=data?.error?.message || data?.message || ("Error HTTP "+res.status);
+      throw new Error(`${provider==="openai"?"OpenAI":"API"} ${res.status}: ${detail}`);
+    }
+    reply=data?.choices?.[0]?.message?.content?.trim()||"";
+  }
+  return reply || "No sabría decirle, doctora.";
 }
 
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -347,14 +405,23 @@ function addMsg(text,type){
  $("chat").appendChild(d);$("chat").scrollTop=$("chat").scrollHeight;
  if(type==="patientMsg") lastPatientReply=text;
 }
+function getBestSpanishVoice(){
+ const voices=speechSynthesis.getVoices();
+ const spanish=voices.filter(v=>/^es(-|_)/i.test(v.lang));
+ const preferred=["Google español","Microsoft Elvira","Microsoft Dalia","Microsoft Sabina","Paulina","Monica","Luciana"];
+ return preferred.map(n=>spanish.find(v=>v.name.toLowerCase().includes(n.toLowerCase()))).find(Boolean)
+        || spanish.find(v=>/female|mujer/i.test(v.name))
+        || spanish[0] || voices[0];
+}
 function speak(text){
- if(!("speechSynthesis" in window)||!text)return;
+ if(!("speechSynthesis" in window)||!$("voiceReply").checked)return;
  speechSynthesis.cancel();
  const u=new SpeechSynthesisUtterance(text);
- u.lang="es-SV"; u.rate=1; u.pitch=1;
- const voices=speechSynthesis.getVoices();
- const preferred=voices.find(v=>/^es(-|_)/i.test(v.lang)) || voices.find(v=>/spanish/i.test(v.name));
- if(preferred)u.voice=preferred;
+ u.lang="es-SV"; u.rate=.94; u.pitch=1.04; u.volume=1;
+ const v=getBestSpanishVoice(); if(v)u.voice=v;
+ const vis=$("voiceVisualizer");
+ u.onstart=()=>vis&&vis.classList.add("active");
+ u.onend=u.onerror=()=>vis&&vis.classList.remove("active");
  speechSynthesis.speak(u);
 }
 function patientReply(text){
@@ -460,6 +527,8 @@ function updateProviderUI(){
   if(p==="openai") $("aiModel").value="gpt-5-mini";
   if(p==="gemini") $("aiModel").value="gemini-3.8-flash";
   if(p==="compatible") $("aiModel").value="";
+  const msg=p==="gemini"?"Gemini API nativa":p==="openai"?"OpenAI API":"API compatible";
+  $("apiMessage").textContent=`Proveedor: ${msg}. La clave solo vive en esta pestaña.`;
 }
 $("aiProvider").addEventListener("change",updateProviderUI);
 $("apiConfigBtn").addEventListener("click",openApiModal);
@@ -503,6 +572,8 @@ $("finish").addEventListener("click",()=>{
 });
 choose();
 })();
+
+if("speechSynthesis" in window) speechSynthesis.onvoiceschanged=()=>getBestSpanishVoice();
 </script>
 </body>
 </html>
