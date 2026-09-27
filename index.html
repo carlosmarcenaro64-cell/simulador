@@ -91,24 +91,20 @@ select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-
 
   <div class="modalBack" id="apiModal" role="dialog" aria-modal="true" aria-labelledby="apiTitle">
     <div class="modal">
-      <h2 id="apiTitle">🤖 Configura tu propia IA</h2>
+      <h2 id="apiTitle">🤖 Conecta tu API — modo de prueba</h2>
       <p>Para usar el paciente con IA, cada persona debe utilizar su propia API de OpenAI.</p>
-      <div class="warningBox">🔐 La clave se usa solo durante esta sesión del navegador y se envía por HTTPS al backend de Vercel para realizar cada consulta. No se guarda en localStorage ni se incluye en GitHub.</div>
+      <div class="warningBox">🧪 Modo de prueba: la clave queda únicamente en memoria mientras esta pestaña esté abierta. Al recargar o cerrar la pestaña se elimina.</div>
       <label for="apiKeyInput">Tu API key de OpenAI</label>
       <div class="apiInput">
         <input id="apiKeyInput" type="password" autocomplete="off" placeholder="Pega aquí tu API key">
         <button class="btn secondary" type="button" id="toggleApiKey">👁️</button>
       </div>
       <div class="apiHelp">¿Todavía no tienes una? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Crear mi API key ↗</a></div>
-      <label for="backendUrl">URL del backend de Vercel</label>
-      <input id="backendUrl" style="width:100%;background:#0b1726;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px"
-             placeholder="https://tu-backend.vercel.app" autocomplete="off">
-      <div class="apiHelp">Solo tendrás que cambiar esta URL una vez cuando Vercel te entregue la dirección del proyecto.</div>
       <div class="actions">
         <button class="btn" type="button" id="saveApiKey">Conectar mi API</button>
         <button class="btn secondary" type="button" id="useLocalMode">Continuar sin IA</button>
       </div>
-      <div class="meta" id="apiMessage">La clave permanecerá solo en memoria hasta que cierres o recargues esta pestaña.</div>
+      <div class="meta" id="apiMessage">Modo de prueba directo. No se usa localStorage, sessionStorage ni cookies.</div>
     </div>
   </div>
 
@@ -272,7 +268,7 @@ const cases=[
 
 const $=id=>document.getElementById(id);
 let current=null, usedStudies=new Set(), hints=0, caseNo=1, lastPatientReply="";
-let apiConfigured=false, userApiKey="", backendBase="";
+let apiConfigured=false, openaiApiKey="";
 function openApiModal(){ $("apiModal").classList.remove("hidden"); setTimeout(()=>$("apiKeyInput").focus(),80); }
 function closeApiModal(){ $("apiModal").classList.add("hidden"); $("apiKeyInput").value=""; }
 function setApiStatus(ok,text){
@@ -280,33 +276,46 @@ function setApiStatus(ok,text){
   $("apiStatus").classList.toggle("ok",ok);
   $("apiStatusText").textContent=text;
 }
-async function testApiConnection(key, base){
-  const res=await fetch(base.replace(/\/$/,"")+"/api/health",{
-    method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
-    body:JSON.stringify({test:true})
-  });
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error||"No se pudo validar la API.");
-  return data;
-}
 async function aiPatientReply(question){
-  if(!apiConfigured || !userApiKey || !backendBase) return null;
+  if(!apiConfigured || !openaiApiKey) return null;
   const caseData={
     level:current.level, age:current.age, sex:current.sex, complaint:current.complaint,
     vitals:current.vitals, labs:current.labs, diagnosis:current.diagnosis,
     history:current.history, studies:current.studies
   };
-  const res=await fetch(backendBase.replace(/\/$/,"")+"/api/chat",{
+  const instructions=`Eres un paciente simulado para educación clínica.
+Responde en español natural y en primera persona como el paciente descrito.
+Nunca reveles el diagnóstico ni digas que eres una IA.
+No inventes resultados, antecedentes o síntomas que no estén en el caso.
+Si te preguntan algo no especificado, responde naturalmente que no lo sabes, no lo recuerdas o no te lo han evaluado.
+Responde de forma breve como un paciente real. No des consejos médicos.
+DATOS DEL CASO:
+${JSON.stringify(caseData)}`;
+
+  const res=await fetch("https://api.openai.com/v1/responses",{
     method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+userApiKey},
-    body:JSON.stringify({question,caseData})
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+openaiApiKey
+    },
+    body:JSON.stringify({
+      model:"gpt-5-mini",
+      instructions,
+      input:question,
+      max_output_tokens:180
+    })
   });
   const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error||"Error al consultar la IA.");
-  return data.reply;
+  if(!res.ok) throw new Error(data?.error?.message || "OpenAI rechazó la solicitud.");
+  let reply=data.output_text;
+  if(!reply && Array.isArray(data.output)){
+    for(const item of data.output){
+      const part=(item.content||[]).find(x=>x.type==="output_text");
+      if(part?.text){ reply=part.text; break; }
+    }
+  }
+  return reply || "No estoy seguro, doctora.";
 }
-
 
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function addMsg(text,type){
@@ -376,7 +385,7 @@ $("chatForm").addEventListener("submit",async e=>{
      patientReply(reply||answer(q));
    }catch(err){
      thinking.remove();
-     addMsg("IA no disponible: "+err.message+" Se usará el modo local para esta pregunta.","systemMsg");
+     addMsg("No se pudo usar la IA: "+err.message,"systemMsg");
      patientReply(answer(q));
    }
  }else setTimeout(()=>patientReply(answer(q)),250);
@@ -426,30 +435,20 @@ $("toggleApiKey").addEventListener("click",()=>{
   const i=$("apiKeyInput"); i.type=i.type==="password"?"text":"password";
 });
 $("useLocalMode").addEventListener("click",()=>{
-  userApiKey=""; backendBase=""; setApiStatus(false,"Modo local"); closeApiModal();
+  openaiApiKey="";
+  setApiStatus(false,"Modo local");
+  closeApiModal();
 });
-$("saveApiKey").addEventListener("click",async()=>{
+$("saveApiKey").addEventListener("click",()=>{
   const key=$("apiKeyInput").value.trim();
-  const base=$("backendUrl").value.trim();
   if(!key){ $("apiMessage").textContent="⚠️ Primero pega tu API key."; return; }
-  if(!/^https:\/\/.+/i.test(base)){ $("apiMessage").textContent="⚠️ Escribe la URL https://... de tu proyecto Vercel."; return; }
-  $("saveApiKey").disabled=true;
-  $("apiMessage").textContent="Comprobando conexión…";
-  try{
-    await testApiConnection(key,base);
-    userApiKey=key; backendBase=base;
-    $("apiKeyInput").value="";
-    setApiStatus(true,"IA conectada");
-    $("apiMessage").textContent="✅ API validada. La clave queda solo en memoria durante esta pestaña.";
-    setTimeout(closeApiModal,700);
-  }catch(err){
-    userApiKey=""; backendBase="";
-    setApiStatus(false,"IA sin configurar");
-    $("apiMessage").textContent="❌ "+err.message;
-  }finally{
-    $("saveApiKey").disabled=false;
-  }
+  openaiApiKey=key;
+  $("apiKeyInput").value="";
+  setApiStatus(true,"IA conectada · prueba");
+  $("apiMessage").textContent="✅ Clave cargada solo en memoria. Se eliminará al cerrar o recargar la pestaña.";
+  setTimeout(closeApiModal,650);
 });
+window.addEventListener("pagehide",()=>{ openaiApiKey=""; });
 $("newCase").addEventListener("click",choose);
 $("difficulty").addEventListener("change",choose);
 $("hint").addEventListener("click",()=>{
