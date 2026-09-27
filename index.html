@@ -94,6 +94,62 @@ body{
  .apiGrid{grid-template-columns:1fr}.top{position:relative}.studyGrid{grid-template-columns:1fr}
 }
 
+
+/* ===== Rediseño visual v4 ===== */
+html{scroll-behavior:smooth}
+body{overflow-x:hidden}
+body:before,body:after{
+ content:"";position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:-1;opacity:.32
+}
+body:before{width:340px;height:340px;background:#1b76d1;left:-110px;top:15vh;animation:orbA 12s ease-in-out infinite alternate}
+body:after{width:300px;height:300px;background:#25c99a;right:-90px;top:52vh;animation:orbB 15s ease-in-out infinite alternate}
+@keyframes orbA{to{transform:translate(90px,90px) scale(1.15)}}@keyframes orbB{to{transform:translate(-90px,-100px) scale(.9)}}
+.wrap{max-width:1280px}
+.top{
+ position:sticky;top:10px;z-index:30;padding:13px 16px;border:1px solid rgba(111,164,217,.22);
+ border-radius:20px;background:rgba(7,20,35,.78);backdrop-filter:blur(18px);
+ box-shadow:0 14px 45px rgba(0,0,0,.18)
+}
+.brand{display:flex;align-items:center;gap:12px}.brand:before{
+ content:"✚";display:grid;place-items:center;width:44px;height:44px;border-radius:14px;
+ background:linear-gradient(135deg,#42d3a7,#55a7ff);color:#06131f;font-size:24px;font-weight:900;
+ box-shadow:0 0 28px rgba(66,211,167,.22)
+}
+.brand h1{letter-spacing:-.035em}.brand p{font-size:.9rem}
+.notice{border:1px solid rgba(255,200,87,.18);border-left:4px solid var(--warn);background:rgba(52,42,16,.55);backdrop-filter:blur(12px)}
+.card{
+ position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(18,36,58,.88),rgba(9,23,39,.91));
+ border-color:rgba(92,145,198,.23);box-shadow:0 20px 55px rgba(0,0,0,.19)
+}
+.card:before{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent)}
+.card h3{display:flex;align-items:center;gap:8px;font-size:1rem;letter-spacing:-.01em}
+.patient{padding-bottom:12px;border-bottom:1px solid rgba(111,164,217,.15)}
+.avatar{width:72px;height:72px;font-size:36px;background:linear-gradient(145deg,#173451,#0e2238)}
+.vitals{gap:10px}.vital{background:linear-gradient(145deg,rgba(24,49,77,.85),rgba(15,35,57,.9));padding:12px}
+.vital b{font-size:1.13rem}.vital small{text-transform:uppercase;letter-spacing:.06em;font-size:.72rem}
+.chat{height:390px;background:linear-gradient(180deg,rgba(4,14,25,.72),rgba(7,22,37,.82));padding:14px}
+.msg{box-shadow:0 6px 18px rgba(0,0,0,.12);border:1px solid rgba(255,255,255,.035)}
+.patientMsg{background:linear-gradient(135deg,#183451,#1a3a5c);border-radius:6px 16px 16px 16px}
+.doctorMsg{background:linear-gradient(135deg,#15503f,#176049);border-radius:16px 6px 16px 16px}
+.systemMsg{background:rgba(73,57,20,.76);border-color:rgba(255,200,87,.16)}
+.chatForm{background:rgba(5,17,29,.55);padding:8px;border:1px solid rgba(111,164,217,.15);border-radius:15px}
+.chatForm input{border:0!important;background:transparent!important}
+.btn{border-radius:12px;box-shadow:inset 0 1px rgba(255,255,255,.18)}
+.btn:not(.secondary){background:linear-gradient(135deg,#42d3a7,#55ddb2)}
+.study{background:linear-gradient(145deg,#173553,#122a44);min-height:48px}
+textarea{transition:.2s ease}textarea:focus{outline:none;border-color:#42d3a7;box-shadow:0 0 0 3px rgba(66,211,167,.1)}
+.apiModal{background:rgba(1,7,13,.82)}
+.apiBox{position:relative;overflow:hidden;padding:28px;background:linear-gradient(145deg,#132b45,#091827);border-color:rgba(99,166,225,.34)}
+.apiBox:before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(66,211,167,.09);filter:blur(50px);right:-70px;top:-90px}
+.apiBox h2{font-size:1.45rem;letter-spacing:-.025em}
+#apiInfo{min-height:22px;padding:10px 12px;border-radius:10px;background:rgba(4,15,26,.55);border:1px solid rgba(111,164,217,.13)}
+#connectAI{min-width:150px}
+@media(max-width:780px){
+ .top{top:5px;border-radius:16px}.brand:before{width:38px;height:38px}.brand p{display:none}
+ .toolbar{width:100%}.toolbar select{flex:1}.toolbar .btn{flex:1}
+ .chat{height:350px}.vital{padding:10px}.apiBox{padding:20px}
+}
+
 </style>
 </head>
 <body>
@@ -110,7 +166,7 @@ body{
         <option value="experto">Experto</option>
         <option value="raro">Extraordinariamente raro</option>
       </select>
-      <button class="btn secondary" id="aiConfigBtn" type="button">🤖 Configurar IA</button>
+      <span class="statusPill" id="aiStatus">● Modo local</span><button class="btn secondary" id="aiConfigBtn" type="button">🤖 Configurar IA</button>
       <button class="btn" id="newCase">Nuevo paciente</button>
     </div>
   </header>
@@ -185,7 +241,7 @@ body{
 <div class="apiModal" id="apiModal">
  <div class="apiBox">
   <h2>🤖 Conecta tu IA</h2>
-  <p>Elige proveedor y pega tu propia API key. La clave queda solamente en memoria y se borra al recargar o cerrar la pestaña.</p>
+  <p>Conecta tu proveedor para que el paciente responda con IA. Primero comprobamos la clave; si funciona, entrarás automáticamente.</p>
   <div class="apiGrid">
    <div><label for="aiProvider">Proveedor</label>
     <select id="aiProvider">
@@ -194,13 +250,13 @@ body{
      <option value="custom">Otra compatible con OpenAI</option>
     </select>
    </div>
-   <div><label for="aiModel">Modelo</label><input id="aiModel" value="gemini-2.5-flash" autocomplete="off"></div>
+   <div><label for="aiModel">Modelo</label><input id="aiModel" value="gemini-3.8-flash" autocomplete="off"></div>
   </div>
   <div id="customEndpointBox" class="hidden"><label for="customEndpoint">Endpoint</label><input id="customEndpoint" placeholder="https://.../v1/chat/completions" autocomplete="off"></div>
   <label for="apiKeyInput">API key</label>
   <input id="apiKeyInput" type="password" placeholder="Pega aquí tu clave" autocomplete="off">
   <div class="actions">
-   <button class="btn" id="connectAI" type="button">Conectar</button>
+   <button class="btn" id="connectAI" type="button">Conectar y probar</button>
    <button class="btn secondary" id="localMode" type="button">Continuar sin IA</button>
   </div>
   <p id="apiInfo">Modo de prueba. No se usa localStorage, sessionStorage ni cookies.</p>
@@ -315,7 +371,7 @@ function addMsg(text,type){
 function bestVoice(){
  const vs=speechSynthesis.getVoices();
  const es=vs.filter(v=>/^es([-_]|$)/i.test(v.lang)||/spanish|español/i.test(v.name));
- const names=["Dalia","Elvira","Sabina","Paulina","Mónica","Monica","Luciana","Helena","Google español"];
+ const names=["Dalia","Elvira","Sabina","Paulina","Mónica","Monica","Luciana","Helena","Google español","Google español de Estados Unidos"];
  for(const n of names){const v=es.find(x=>x.name.toLowerCase().includes(n.toLowerCase()));if(v)return v}
  return es[0]||vs[0]||null;
 }
@@ -456,21 +512,58 @@ function closeAIConfig(){$("apiModal").classList.add("hidden");$("apiKeyInput").
 function updateProvider(){
  const p=$("aiProvider").value;
  $("customEndpointBox").classList.toggle("hidden",p!=="custom");
- if(p==="gemini")$("aiModel").value="gemini-2.5-flash";
+ if(p==="gemini")$("aiModel").value="gemini-3.8-flash";
  else if(p==="openai")$("aiModel").value="gpt-5-mini";
  else $("aiModel").value="";
 }
 $("aiProvider").addEventListener("change",updateProvider);
 $("aiConfigBtn").addEventListener("click",openAIConfig);
-$("localMode").addEventListener("click",()=>{apiKey="";aiConnected=false;closeAIConfig();});
-$("connectAI").addEventListener("click",()=>{
+$("localMode").addEventListener("click",()=>{apiKey="";aiConnected=false;$("aiStatus").textContent="● Modo local";closeAIConfig();});
+$("connectAI").addEventListener("click",async()=>{
  const k=$("apiKeyInput").value.trim();
  if(!k){$("apiInfo").textContent="⚠️ Pega una API key primero.";return}
- apiKey=k;aiConnected=true;
- $("apiInfo").textContent="✅ API cargada para esta pestaña.";
- $("apiConfigBtn").textContent="🤖 IA conectada";
- setTimeout(closeAIConfig,450);
+ const btn=$("connectAI");
+ btn.disabled=true; btn.textContent="Probando…";
+ apiKey=k;
+ try{
+   const cfg=providerSettings();
+   if(cfg.p==="gemini"){
+     const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:generateContent`;
+     const r=await fetch(url,{
+       method:"POST",
+       headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},
+       body:JSON.stringify({contents:[{parts:[{text:"Responde únicamente: OK"}]}],generationConfig:{maxOutputTokens:8}})
+     });
+     const d=await r.json().catch(()=>({}));
+     if(!r.ok) throw new Error(d?.error?.message||`Gemini HTTP ${r.status}`);
+   }else{
+     if(!cfg.endpoint)throw new Error("Falta el endpoint.");
+     const r=await fetch(cfg.endpoint,{
+       method:"POST",
+       headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
+       body:JSON.stringify({model:cfg.model,messages:[{role:"user",content:"Responde únicamente: OK"}],max_tokens:8})
+     });
+     const d=await r.json().catch(()=>({}));
+     if(!r.ok)throw new Error(d?.error?.message||d?.message||`HTTP ${r.status}`);
+   }
+   aiConnected=true;
+   $("apiInfo").textContent="✅ Conexión comprobada. Entrando al simulador…";
+   $("aiConfigBtn").textContent="⚙️ Cambiar IA";$("aiStatus").textContent="● "+$("aiProvider").selectedOptions[0].text+" conectado";
+   setTimeout(closeAIConfig,650);
+ }catch(err){
+   aiConnected=false; apiKey="";
+   $("apiInfo").textContent="❌ "+err.message;
+ }finally{
+   btn.disabled=false;btn.textContent="Conectar y probar";
+ }
 });
+let speechUnlocked=false;
+function unlockSpeech(){
+ if(speechUnlocked||!("speechSynthesis" in window))return;
+ const u=new SpeechSynthesisUtterance(" ");
+ u.volume=.01;speechSynthesis.speak(u);speechUnlocked=true;
+}
+document.addEventListener("pointerdown",unlockSpeech,{once:true});
 window.addEventListener("pagehide",()=>{apiKey="";});
 if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}
 
