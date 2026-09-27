@@ -93,18 +93,22 @@ select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-
     <div class="modal">
       <h2 id="apiTitle">🤖 Configura tu propia IA</h2>
       <p>Para usar el paciente con IA, cada persona debe utilizar su propia API de OpenAI.</p>
-      <div class="warningBox">🔐 Tu clave no debe quedar escrita dentro del HTML público. Esta pantalla prepara el acceso; la conexión definitiva requiere el backend seguro.</div>
+      <div class="warningBox">🔐 La clave se usa solo durante esta sesión del navegador y se envía por HTTPS al backend de Vercel para realizar cada consulta. No se guarda en localStorage ni se incluye en GitHub.</div>
       <label for="apiKeyInput">Tu API key de OpenAI</label>
       <div class="apiInput">
         <input id="apiKeyInput" type="password" autocomplete="off" placeholder="Pega aquí tu API key">
         <button class="btn secondary" type="button" id="toggleApiKey">👁️</button>
       </div>
       <div class="apiHelp">¿Todavía no tienes una? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Crear mi API key ↗</a></div>
+      <label for="backendUrl">URL del backend de Vercel</label>
+      <input id="backendUrl" style="width:100%;background:#0b1726;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px"
+             placeholder="https://tu-backend.vercel.app" autocomplete="off">
+      <div class="apiHelp">Solo tendrás que cambiar esta URL una vez cuando Vercel te entregue la dirección del proyecto.</div>
       <div class="actions">
         <button class="btn" type="button" id="saveApiKey">Conectar mi API</button>
         <button class="btn secondary" type="button" id="useLocalMode">Continuar sin IA</button>
       </div>
-      <div class="meta" id="apiMessage">La clave no se guardará en este archivo.</div>
+      <div class="meta" id="apiMessage">La clave permanecerá solo en memoria hasta que cierres o recargues esta pestaña.</div>
     </div>
   </div>
 
@@ -268,13 +272,39 @@ const cases=[
 
 const $=id=>document.getElementById(id);
 let current=null, usedStudies=new Set(), hints=0, caseNo=1, lastPatientReply="";
-let apiConfigured=false;
+let apiConfigured=false, userApiKey="", backendBase="";
 function openApiModal(){ $("apiModal").classList.remove("hidden"); setTimeout(()=>$("apiKeyInput").focus(),80); }
 function closeApiModal(){ $("apiModal").classList.add("hidden"); $("apiKeyInput").value=""; }
 function setApiStatus(ok,text){
   apiConfigured=ok;
   $("apiStatus").classList.toggle("ok",ok);
   $("apiStatusText").textContent=text;
+}
+async function testApiConnection(key, base){
+  const res=await fetch(base.replace(/\/$/,"")+"/api/health",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+    body:JSON.stringify({test:true})
+  });
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||"No se pudo validar la API.");
+  return data;
+}
+async function aiPatientReply(question){
+  if(!apiConfigured || !userApiKey || !backendBase) return null;
+  const caseData={
+    level:current.level, age:current.age, sex:current.sex, complaint:current.complaint,
+    vitals:current.vitals, labs:current.labs, diagnosis:current.diagnosis,
+    history:current.history, studies:current.studies
+  };
+  const res=await fetch(backendBase.replace(/\/$/,"")+"/api/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+userApiKey},
+    body:JSON.stringify({question,caseData})
+  });
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||"Error al consultar la IA.");
+  return data.reply;
 }
 
 
@@ -334,10 +364,22 @@ function study(name,btn){
  box.innerHTML=`<b>${esc(name)}</b><br>${esc(current.studies[name])}`;
  $("studyResults").appendChild(box);
 }
-$("chatForm").addEventListener("submit",e=>{
+$("chatForm").addEventListener("submit",async e=>{
  e.preventDefault(); const q=$("question").value.trim(); if(!q)return;
  addMsg(q,"doctorMsg");$("question").value="";
- setTimeout(()=>patientReply(answer(q)),250);
+ if(apiConfigured){
+   addMsg("Pensando…","systemMsg");
+   const thinking=$("chat").lastElementChild;
+   try{
+     const reply=await aiPatientReply(q);
+     thinking.remove();
+     patientReply(reply||answer(q));
+   }catch(err){
+     thinking.remove();
+     addMsg("IA no disponible: "+err.message+" Se usará el modo local para esta pregunta.","systemMsg");
+     patientReply(answer(q));
+   }
+ }else setTimeout(()=>patientReply(answer(q)),250);
 });
 
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -384,15 +426,29 @@ $("toggleApiKey").addEventListener("click",()=>{
   const i=$("apiKeyInput"); i.type=i.type==="password"?"text":"password";
 });
 $("useLocalMode").addEventListener("click",()=>{
-  setApiStatus(false,"Modo local");
-  closeApiModal();
+  userApiKey=""; backendBase=""; setApiStatus(false,"Modo local"); closeApiModal();
 });
-$("saveApiKey").addEventListener("click",()=>{
+$("saveApiKey").addEventListener("click",async()=>{
   const key=$("apiKeyInput").value.trim();
+  const base=$("backendUrl").value.trim();
   if(!key){ $("apiMessage").textContent="⚠️ Primero pega tu API key."; return; }
-  $("apiMessage").textContent="✅ La pantalla ya detecta la clave. Falta conectar el backend para poder usarla de forma segura.";
-  setApiStatus(false,"Backend pendiente");
-  $("apiKeyInput").value="";
+  if(!/^https:\/\/.+/i.test(base)){ $("apiMessage").textContent="⚠️ Escribe la URL https://... de tu proyecto Vercel."; return; }
+  $("saveApiKey").disabled=true;
+  $("apiMessage").textContent="Comprobando conexión…";
+  try{
+    await testApiConnection(key,base);
+    userApiKey=key; backendBase=base;
+    $("apiKeyInput").value="";
+    setApiStatus(true,"IA conectada");
+    $("apiMessage").textContent="✅ API validada. La clave queda solo en memoria durante esta pestaña.";
+    setTimeout(closeApiModal,700);
+  }catch(err){
+    userApiKey=""; backendBase="";
+    setApiStatus(false,"IA sin configurar");
+    $("apiMessage").textContent="❌ "+err.message;
+  }finally{
+    $("saveApiKey").disabled=false;
+  }
 });
 $("newCase").addEventListener("click",choose);
 $("difficulty").addEventListener("change",choose);
