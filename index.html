@@ -91,9 +91,9 @@ select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-
 
   <div class="modalBack" id="apiModal" role="dialog" aria-modal="true" aria-labelledby="apiTitle">
     <div class="modal">
-      <h2 id="apiTitle">🤖 Conecta tu API — modo de prueba</h2>
+      <h2 id="apiTitle">🤖 Conecta tu IA — modo de prueba</h2>
       <p>Para usar el paciente con IA, cada persona debe utilizar su propia API de OpenAI.</p>
-      <div class="warningBox">🧪 Modo de prueba: la clave queda únicamente en memoria mientras esta pestaña esté abierta. Al recargar o cerrar la pestaña se elimina.</div>
+      <div class="warningBox">🧪 Elige OpenAI, Gemini u otra API compatible. La clave queda únicamente en memoria; al recargar o cerrar la pestaña se elimina.</div>
       <label for="apiKeyInput">Tu API key de OpenAI</label>
       <div class="apiInput">
         <input id="apiKeyInput" type="password" autocomplete="off" placeholder="Pega aquí tu API key">
@@ -278,12 +278,24 @@ function setApiStatus(ok,text){
 }
 async function aiPatientReply(question){
   if(!apiConfigured || !openaiApiKey) return null;
+
+  const provider=$("aiProvider").value;
+  const model=$("aiModel").value.trim();
+  let endpoint="";
+  if(provider==="openai") endpoint="https://api.openai.com/v1/chat/completions";
+  else if(provider==="gemini") endpoint="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+  else endpoint=$("customEndpoint").value.trim();
+
+  if(!endpoint) throw new Error("Falta el endpoint de la IA.");
+  if(!model) throw new Error("Falta indicar el modelo.");
+
   const caseData={
     level:current.level, age:current.age, sex:current.sex, complaint:current.complaint,
     vitals:current.vitals, labs:current.labs, diagnosis:current.diagnosis,
     history:current.history, studies:current.studies
   };
-  const instructions=`Eres un paciente simulado para educación clínica.
+
+  const systemPrompt=`Eres un paciente simulado para educación clínica.
 Responde en español natural y en primera persona como el paciente descrito.
 Nunca reveles el diagnóstico ni digas que eres una IA.
 No inventes resultados, antecedentes o síntomas que no estén en el caso.
@@ -292,29 +304,26 @@ Responde de forma breve como un paciente real. No des consejos médicos.
 DATOS DEL CASO:
 ${JSON.stringify(caseData)}`;
 
-  const res=await fetch("https://api.openai.com/v1/responses",{
+  const res=await fetch(endpoint,{
     method:"POST",
     headers:{
       "Content-Type":"application/json",
       "Authorization":"Bearer "+openaiApiKey
     },
     body:JSON.stringify({
-      model:"gpt-5-mini",
-      instructions,
-      input:question,
-      max_output_tokens:180
+      model,
+      messages:[
+        {role:"system",content:systemPrompt},
+        {role:"user",content:question}
+      ],
+      max_tokens:180
     })
   });
+
   const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data?.error?.message || "OpenAI rechazó la solicitud.");
-  let reply=data.output_text;
-  if(!reply && Array.isArray(data.output)){
-    for(const item of data.output){
-      const part=(item.content||[]).find(x=>x.type==="output_text");
-      if(part?.text){ reply=part.text; break; }
-    }
-  }
-  return reply || "No estoy seguro, doctora.";
+  if(!res.ok) throw new Error(data?.error?.message || data?.message || ("Error HTTP "+res.status));
+
+  return data?.choices?.[0]?.message?.content || "No estoy seguro, doctora.";
 }
 
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -430,6 +439,14 @@ $("stopVoice").addEventListener("click",()=>{
 });
 $("speakLast").addEventListener("click",()=>speak(lastPatientReply));
 
+function updateProviderUI(){
+  const p=$("aiProvider").value;
+  $("customEndpointWrap").classList.toggle("hidden",p!=="compatible");
+  if(p==="openai") $("aiModel").value="gpt-5-mini";
+  if(p==="gemini") $("aiModel").value="gemini-3.8-flash";
+  if(p==="compatible") $("aiModel").value="";
+}
+$("aiProvider").addEventListener("change",updateProviderUI);
 $("apiConfigBtn").addEventListener("click",openApiModal);
 $("toggleApiKey").addEventListener("click",()=>{
   const i=$("apiKeyInput"); i.type=i.type==="password"?"text":"password";
