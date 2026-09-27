@@ -46,6 +46,16 @@ button{cursor:pointer}
 .lab td,.lab th{padding:9px;border-bottom:1px solid var(--line);text-align:left}
 .lab th{color:var(--muted)}
 .hidden{display:none!important}
+.apiStatus{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#0c1727;color:var(--muted);font-size:.85rem}
+.apiDot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+.apiStatus.ok .apiDot{background:var(--accent)}
+.modalBack{position:fixed;inset:0;background:rgba(2,7,14,.82);backdrop-filter:blur(8px);display:grid;place-items:center;padding:18px;z-index:9999}
+.modal{width:min(570px,100%);background:#101c2e;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.modal h2{margin:0 0 8px}.modal p{color:var(--muted);line-height:1.5}
+.apiInput{display:flex;gap:8px}.apiInput input{flex:1;min-width:0;background:#0b1726;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px}
+.apiHelp{font-size:.86rem;color:var(--muted);margin-top:10px}.apiHelp a{color:var(--accent2)}
+.warningBox{padding:11px 12px;border-radius:11px;background:#211d14;color:#ffe8ad;border:1px solid #594a24;margin:12px 0}
+@media(max-width:560px){.apiInput{flex-direction:column}.modal{padding:16px}}
 .studyGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .study{padding:11px;border-radius:10px;background:#152a43;color:var(--text);border:1px solid #315174}
 textarea{width:100%;min-height:90px;resize:vertical;background:#0b1726;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px}
@@ -71,11 +81,32 @@ select{background:#0c1929;color:var(--text);border:1px solid var(--line);border-
         <option value="experto">Experto</option>
         <option value="raro">Extraordinariamente raro</option>
       </select>
+      <div class="apiStatus" id="apiStatus"><span class="apiDot"></span><span id="apiStatusText">IA sin configurar</span></div>
+      <button class="btn secondary" type="button" id="apiConfigBtn">⚙️ Configurar IA</button>
       <button class="btn" id="newCase">Nuevo paciente</button>
     </div>
   </header>
 
   <div class="notice">⚠️ Simulador educativo. No debe utilizarse para tomar decisiones clínicas sobre pacientes reales.</div>
+
+  <div class="modalBack" id="apiModal" role="dialog" aria-modal="true" aria-labelledby="apiTitle">
+    <div class="modal">
+      <h2 id="apiTitle">🤖 Configura tu propia IA</h2>
+      <p>Para usar el paciente con IA, cada persona debe utilizar su propia API de OpenAI.</p>
+      <div class="warningBox">🔐 Tu clave no debe quedar escrita dentro del HTML público. Esta pantalla prepara el acceso; la conexión definitiva requiere el backend seguro.</div>
+      <label for="apiKeyInput">Tu API key de OpenAI</label>
+      <div class="apiInput">
+        <input id="apiKeyInput" type="password" autocomplete="off" placeholder="Pega aquí tu API key">
+        <button class="btn secondary" type="button" id="toggleApiKey">👁️</button>
+      </div>
+      <div class="apiHelp">¿Todavía no tienes una? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Crear mi API key ↗</a></div>
+      <div class="actions">
+        <button class="btn" type="button" id="saveApiKey">Conectar mi API</button>
+        <button class="btn secondary" type="button" id="useLocalMode">Continuar sin IA</button>
+      </div>
+      <div class="meta" id="apiMessage">La clave no se guardará en este archivo.</div>
+    </div>
+  </div>
 
   <main class="grid">
     <div>
@@ -237,6 +268,15 @@ const cases=[
 
 const $=id=>document.getElementById(id);
 let current=null, usedStudies=new Set(), hints=0, caseNo=1, lastPatientReply="";
+let apiConfigured=false;
+function openApiModal(){ $("apiModal").classList.remove("hidden"); setTimeout(()=>$("apiKeyInput").focus(),80); }
+function closeApiModal(){ $("apiModal").classList.add("hidden"); $("apiKeyInput").value=""; }
+function setApiStatus(ok,text){
+  apiConfigured=ok;
+  $("apiStatus").classList.toggle("ok",ok);
+  $("apiStatusText").textContent=text;
+}
+
 
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function addMsg(text,type){
@@ -339,6 +379,21 @@ $("stopVoice").addEventListener("click",()=>{
 });
 $("speakLast").addEventListener("click",()=>speak(lastPatientReply));
 
+$("apiConfigBtn").addEventListener("click",openApiModal);
+$("toggleApiKey").addEventListener("click",()=>{
+  const i=$("apiKeyInput"); i.type=i.type==="password"?"text":"password";
+});
+$("useLocalMode").addEventListener("click",()=>{
+  setApiStatus(false,"Modo local");
+  closeApiModal();
+});
+$("saveApiKey").addEventListener("click",()=>{
+  const key=$("apiKeyInput").value.trim();
+  if(!key){ $("apiMessage").textContent="⚠️ Primero pega tu API key."; return; }
+  $("apiMessage").textContent="✅ La pantalla ya detecta la clave. Falta conectar el backend para poder usarla de forma segura.";
+  setApiStatus(false,"Backend pendiente");
+  $("apiKeyInput").value="";
+});
 $("newCase").addEventListener("click",choose);
 $("difficulty").addEventListener("change",choose);
 $("hint").addEventListener("click",()=>{
